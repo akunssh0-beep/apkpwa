@@ -7,7 +7,7 @@
     <title>PWA Automator Pro - it.adi.p</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="./internal_assets/jszip.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
@@ -80,6 +80,10 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<meta name="theme-color" content="#3b82f6">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-512.png">
 </head>
 <body class="text-slate-900 dark:text-slate-200 min-h-screen transition-colors duration-500 pb-24">
 
@@ -320,7 +324,7 @@
 
         // --- WORKER INITIALIZATION ---
         const workerCode = `
-            self.importScripts('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+            self.importScripts('./internal_assets/jszip.min.js');
             
             self.onmessage = async function(e) {
                 const { appName, themeColor, exportFormat, buildMode, files, iconBlob, splashBlob, proxyUrl, useProxy, notifData } = e.data;
@@ -395,7 +399,22 @@
                         }
 
                         const swReg = \`<script>if('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('\${rel}sw.js'); }); }<\/script>\`;
-                        content = content.replace(/<\\/head>/i, pwaMeta + '</head>').replace(/<\\/body>/i, swReg + pushScript + '</body>');
+                        content = content.replace(/<\\/head>/i, pwaMeta + '</head>').replace(/<\\/body>/i, swReg + pushScript + '<script>if('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); }); }</script>
+                            <script>
+                                if ('Notification' in window) {
+                                    Notification.requestPermission().then(permission => {
+                                        if (permission === 'granted') {
+                                            navigator.serviceWorker.ready.then(registration => {
+                                                registration.showNotification('ffy', {
+                                                    body: 'vgh',
+                                                    icon: './icon-512.png',
+                                                    vibrate: [200, 100, 200]
+                                                });
+                                            });
+                                        }
+                                    });
+                                }
+                            </script></body>');
                         sitemap += \`<url><loc>\${file.name}</loc></url>\\n\`;
                     }
 

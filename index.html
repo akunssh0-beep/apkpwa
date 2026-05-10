@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: blob: data: 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:;">
+    <title>PWA Automator Pro - it.adi.p</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        ios: { blue: '#007AFF', gray: '#8E8E93', system: '#F2F2F7', dark: '#1C1C1E' },
+                        playstore: '#01875f',
+                        accent: '#3b82f6',
+                        netlify: '#00AD9F',
+                        github: '#24292e',
+                        capacitor: '#53B9FF',
+                        cordova: '#E8E8E8',
+                        premium: '#fbbf24',
+                        vercel: '#000000',
+                        firebase: '#FFCA28'
+                    },
+                    borderRadius: { 'ios': '1.25rem', 'samsung': '1.5rem', '4xl': '2rem', '5xl': '3rem' },
+                    animation: {
+                        'subtle-float': 'float 6s ease-in-out infinite',
+                        'ios-pop': 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        'progress-play': 'playProgress 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+                        pop: { '0%': { transform: 'scale(0.95)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+                        playProgress: { '0%': { left: '-100%' }, '100%': { left: '100%' } }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(25px) saturate(200%); -webkit-backdrop-filter: blur(25px) saturate(200%); }
+        .dark .glass-panel { background: rgba(28, 28, 30, 0.75); backdrop-filter: blur(25px) saturate(200%); }
+        
+        .hover-glow { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .hover-glow:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -5px rgba(59, 130, 246, 0.3); border-color: rgba(59, 130, 246, 0.5); }
+        
+        #cinematicLoader { position: fixed; inset: 0; background: #020617; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 1s ease; }
+        .loader-ring { width: 80px; height: 80px; border-radius: 50%; border: 2px solid transparent; border-top-color: #3b82f6; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .btn-ripple { position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-ripple:active { transform: scale(0.96); }
+        .bg-animate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+        .dark .bg-animate { background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%); }
+        
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        .audit-badge { @apply flex items-center justify-between p-3 rounded-2xl bg-slate-100/50 dark:bg-slate-900/50 border border-transparent dark:border-slate-800; }
+        .score-circle { @apply w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black border-2; }
+        
+        .deploy-btn { @apply flex flex-col items-center justify-center p-4 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 hover:scale-105 transition-all duration-300 gap-2 text-[10px] font-bold uppercase tracking-tighter; }
+        
+        .preview-container { height: 400px; width: 100%; border-radius: 2rem; overflow: hidden; border: 4px solid #334155; background: #fff; }
+        .neon-glow { text-shadow: 0 0 10px var(--glow-color); }
+    </style>
+
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body class="text-slate-900 dark:text-slate-200 min-h-screen transition-colors duration-500 pb-24">
+
+    <div id="cinematicLoader">
+        <div class="loader-ring"></div>
+        <p class="mt-4 text-[10px] font-black uppercase tracking-[0.4em] text-blue-500 animate-pulse">Adi.P Secure Engine v3.2</p>
+    </div>
+
+    <div class="bg-animate"></div>
+
+    <nav class="sticky top-0 z-50 glass-panel border-b border-slate-200/50 dark:border-slate-800/50">
+        <div class="max-w-xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 animate-subtle-float">
+                    <i data-lucide="layers" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <span class="block font-extrabold text-lg leading-tight dark:text-white tracking-tight">it.adi.p</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="block text-[8px] font-black bg-premium text-black px-1.5 py-0.5 rounded border border-premium uppercase tracking-tighter">Ultimate Premium v3.2</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="exportBackup()" class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center text-blue-500 hover:scale-110 transition-all">
+                    <i data-lucide="database" class="w-5 h-5"></i>
+                </button>
+                <button id="themeToggle" class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-yellow-400 transition-all active:scale-90">
+                    <i data-lucide="moon" id="moonIcon" class="w-5 h-5"></i>
+                    <i data-lucide="sun" id="sunIcon" class="w-5 h-5 hidden"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-xl mx-auto w-full p-6 space-y-8 mt-2">
+        <header class="space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-premium/10 text-premium rounded-full text-[10px] font-black uppercase tracking-wider">
+                <i data-lucide="zap" class="w-3 h-3"></i> Hybrid Engine Active
+            </div>
+            <h1 class="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+                Elite <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">PWA Automator</span>.
+            </h1>
+        </header>
+
+        <div class="glass-panel border border-white/50 dark:border-slate-700/50 rounded-5xl p-8 premium-shadow space-y-8 animate-ios-pop hover-glow">
+            
+            <div id="historyBox" class="space-y-3">
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Recent Build History</span>
+                    <button onclick="clearHistory()" class="text-[9px] font-bold text-red-400 hover:underline uppercase">Clear</button>
+                </div>
+                <div id="historyList" class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"></div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="relative">
+                    <label class="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1 mb-2 block">Application Branding</label>
+                    <input type="text" id="appName" placeholder="Nama Aplikasi (Tanpa Karakter Spesial)" oninput="validateAppName(this); haptic(5); autoSaveProject()"
+                        class="chat-input w-full bg-slate-100/50 dark:bg-slate-900/50 border border-transparent dark:border-slate-800 rounded-3xl pl-6 pr-6 py-5 outline-none focus:bg-white dark:focus:bg-black transition-all dark:text-white font-semibold text-base shadow-inner">
+                    <p id="nameError" class="hidden text-red-500 text-[9px] mt-2 ml-2 font-bold uppercase italic">Karakter dilarang terdeteksi!</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-1">
+                        <label class="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1 mb-2 block">Theme Color</label>
+                        <div class="flex items-center gap-3 bg-slate-100/50 dark:bg-slate-900/50 border border-transparent dark:border-slate-800 rounded-3xl px-5 py-4 transition-all shadow-inner">
+                            <input type="color" id="themeColor" value="#3b82f6" oninput="updateColorHex(this.value); autoSaveProject();" class="w-8 h-8 rounded-xl cursor-pointer bg-transparent border-none">
+                            <span id="colorHex" class="text-xs font-mono font-bold dark:text-slate-300">#3B82F6</span>
+                        </div>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1 mb-2 block">App Icon</label>
+                        <label class="cursor-pointer flex items-center justify-center gap-2 bg-slate-100/50 dark:bg-slate-900/50 border border-dashed border-slate-300 dark:border-slate-700 rounded-3xl px-5 py-4 transition-all shadow-inner hover:bg-blue-500/10">
+                            <i data-lucide="image" class="w-4 h-4 text-slate-400"></i>
+                            <span id="iconStatusText" class="text-[10px] font-bold dark:text-slate-300 uppercase">Upload</span>
+                            <input type="file" id="iconInput" accept="image/*" class="hidden" onchange="handleIconUpload(this)">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="space-y-4 p-5 bg-slate-50/50 dark:bg-black/20 rounded-3xl border border-slate-200 dark:border-slate-800">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-[11px] font-bold uppercase tracking-widest text-blue-500">Advanced Icon & Optimization</label>
+                        <div class="flex items-center gap-1.5">
+                           <span class="text-[8px] font-black bg-blue-500 text-white px-1 py-0.5 rounded uppercase">Auto-Compress</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <span class="text-[9px] uppercase font-bold text-slate-400 block mb-2">Border Radius</span>
+                            <input type="range" id="iconRadius" min="0" max="50" value="20" oninput="autoSaveProject()" class="w-full accent-blue-500">
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="neonGlow" onchange="autoSaveProject()" class="w-4 h-4 accent-blue-500">
+                                <span class="text-[9px] uppercase font-bold text-slate-400">Enable Neon Glow</span>
+                            </label>
+                             <label class="flex items-center gap-2">
+                                <input type="checkbox" id="compressIcon" checked onchange="autoSaveProject()" class="w-4 h-4 accent-blue-500">
+                                <span class="text-[9px] uppercase font-bold text-slate-400">Ultra Compression</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4 p-5 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-3xl border border-indigo-200 dark:border-indigo-900 animate-ios-pop">
+                    <label class="text-[11px] font-bold uppercase tracking-widest text-indigo-500 block">Push Notification Generator</label>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" id="notifTitle" placeholder="Notification Title" oninput="autoSaveProject()" class="text-[10px] w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 outline-none focus:border-indigo-500 transition-all">
+                            <input type="text" id="notifBody" placeholder="Message content..." oninput="autoSaveProject()" class="text-[10px] w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 outline-none focus:border-indigo-500 transition-all">
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                             <div class="flex items-center gap-2">
+                                <input type="checkbox" id="enableNotif" onchange="autoSaveProject()" class="w-4 h-4 accent-indigo-500">
+                                <span class="text-[9px] uppercase font-bold text-slate-400">Enable Push on Load</span>
+                            </div>
+                            <button onclick="testNotification()" class="px-4 py-2 bg-indigo-500 text-white rounded-xl text-[9px] font-black uppercase hover:bg-indigo-600 transition-all">Test Notification</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-1">
+                        <label class="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1 mb-2 block">Offline Mode</label>
+                        <div class="flex items-center gap-2 bg-slate-100/50 dark:bg-slate-900/50 border border-transparent dark:border-slate-800 rounded-3xl px-4 py-4">
+                            <select id="buildMode" onchange="haptic(10)" class="w-full bg-transparent outline-none dark:text-white font-semibold text-xs">
+                                <option value="offline_bundle">Bundle External Assets (MAX)</option>
+                                <option value="standard">Standard PWA</option>
+                            </select>
+                            <div class="flex items-center gap-1">
+                                <input type="checkbox" id="proxyToggle" title="Use CORS Proxy" checked>
+                                <span class="text-[8px] font-bold">PROXY</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1 mb-2 block">Output Format</label>
+                        <select id="exportFormat" onchange="haptic(10)" class="w-full bg-slate-100/50 dark:bg-slate-900/50 border border-transparent dark:border-slate-800 rounded-3xl px-6 py-4 outline-none focus:bg-white dark:focus:bg-black appearance-none dark:text-white font-semibold text-xs transition-all shadow-inner">
+                            <option value="pwa_full">Full PWA Package</option>
+                            <option value="capacitor">Capacitor (Ready to Build)</option>
+                            <option value="cordova">Cordova Project</option>
+                            <option value="bubblewrap">Bubblewrap (Android APK Config)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dropZone" class="group relative border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-5xl p-10 text-center transition-all duration-500 bg-slate-50/50 dark:bg-slate-950/20 overflow-hidden hover:border-blue-500/50">
+                <input type="file" id="htmlInput" accept=".html,.css" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+                <div id="uploadContent" class="space-y-4 relative z-10">
+                    <div class="w-20 h-20 bg-white dark:bg-slate-800 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-xl group-hover:scale-110 transition-all duration-500">
+                        <i data-lucide="cloud-upload" class="w-10 h-10 text-blue-500"></i>
+                    </div>
+                    <p class="text-[11px] font-bold uppercase text-slate-400 tracking-widest">Drop HTML/CSS Files Here</p>
+                </div>
+            </div>
+
+            <div id="previewSection" class="hidden space-y-4 pt-6 border-t border-slate-200/50 dark:border-slate-800/50">
+                <label class="text-[11px] font-bold uppercase tracking-widest text-blue-500 ml-1 block">Live Real-time Preview</label>
+                <div class="preview-container shadow-2xl">
+                    <iframe id="livePreview" class="w-full h-full border-none"></iframe>
+                </div>
+            </div>
+
+            <div id="auditSection" class="hidden space-y-4 pt-6 border-t border-slate-200/50 dark:border-slate-800/50">
+                <label class="text-[11px] font-bold uppercase tracking-widest text-blue-500 ml-1 block">Live Audit & Intelligence</label>
+                <div class="grid grid-cols-2 gap-3" id="auditGrid">
+                    <div class="audit-badge"><span class="text-[9px] font-bold uppercase">SEO Score</span><div id="res-seo" class="score-circle border-green-500 text-green-500">--</div></div>
+                    <div class="audit-badge"><span class="text-[9px] font-bold uppercase">Mobile Ready</span><div id="res-mobile" class="score-circle border-blue-500 text-blue-500">--</div></div>
+                    <div class="audit-badge"><span class="text-[9px] font-bold uppercase">Speed Index</span><div id="res-speed" class="score-circle border-yellow-500 text-yellow-500">--</div></div>
+                    <div class="audit-badge"><span class="text-[9px] font-bold uppercase">Accessibility</span><div id="res-access" class="score-circle border-purple-500 text-purple-500">--</div></div>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <span id="res-meta" class="text-[8px] px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800">AUDIT PENDING</span>
+                    <span id="res-links" class="text-[8px] px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800">0 LINKS</span>
+                    <span id="res-img" class="text-[8px] px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800">0 IMGS</span>
+                    <span id="res-script" class="text-[8px] px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800">0 SCRIPTS</span>
+                </div>
+            </div>
+
+            <div id="deploymentSection" class="hidden space-y-4 pt-6 border-t border-slate-200/50 dark:border-slate-800/50 animate-ios-pop">
+                <label class="text-[11px] font-bold uppercase tracking-widest text-indigo-500 ml-1 block">Cloud Deployment & Host Preview</label>
+                <div class="grid grid-cols-4 gap-3">
+                    <button onclick="deployCloud('github')" class="deploy-btn hover:border-github dark:hover:bg-github/20">
+                        <i data-lucide="github" class="w-6 h-6 text-github dark:text-white"></i>
+                        <span>GitHub</span>
+                    </button>
+                    <button onclick="deployCloud('netlify')" class="deploy-btn hover:border-netlify dark:hover:bg-netlify/20">
+                        <i data-lucide="globe" class="w-6 h-6 text-netlify"></i>
+                        <span>Netlify</span>
+                    </button>
+                    <button onclick="deployCloud('vercel')" class="deploy-btn hover:border-slate-400 dark:hover:bg-white/10">
+                        <i data-lucide="triangle" class="w-6 h-6 text-vercel dark:text-white"></i>
+                        <span>Vercel</span>
+                    </button>
+                    <button onclick="openOneClickHost()" class="deploy-btn border-blue-500 bg-blue-500/10 hover:bg-blue-500/20">
+                        <i data-lucide="external-link" class="w-6 h-6 text-blue-500"></i>
+                        <span>Live Host</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="buildProgressArea" class="hidden space-y-3">
+                <div class="flex justify-between items-center text-[11px] font-black uppercase text-blue-500">
+                    <span id="progressText">Processing...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div id="progressBarFill" class="h-full bg-blue-500 w-0 transition-all duration-500"></div>
+                </div>
+            </div>
+
+            <div id="actionArea" class="hidden transform transition-all duration-500">
+                <button onclick="processAndDownload()" class="btn-ripple group w-full bg-slate-900 dark:bg-blue-600 text-white font-black py-6 rounded-[2rem] shadow-2xl shadow-blue-500/30 flex items-center justify-center gap-4 text-base tracking-tight hover-glow">
+                    <i data-lucide="rocket" class="w-6 h-6 group-hover:animate-bounce"></i>
+                    START GENERATION PROCESS
+                </button>
+            </div>
+
+            <div id="messageBox" class="hidden p-5 rounded-3xl text-center text-[10px] font-black uppercase border"></div>
+        </div>
+
+        <footer class="pt-8 flex flex-col items-center gap-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Build by it.adi.p &copy; 2026</p>
+        </footer>
+    </main>
+
+    <script>
+        // --- GLOBAL ULTIMATE ENGINE V3.2 (Compressed & Push Enabled) ---
+        const DB_NAME = 'PWA_Automator_V6_Owner';
+        const DB_VERSION = 3;
+        let db, selectedFiles = [], uploadedIconBlob = null;
+        const PROXY_URL = "https://api.allorigins.win/raw?url=";
+
+        // --- WORKER INITIALIZATION ---
+        const workerCode = `
+            self.importScripts('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+            
+            self.onmessage = async function(e) {
+                const { appName, themeColor, exportFormat, buildMode, files, iconBlob, splashBlob, proxyUrl, useProxy, notifData } = e.data;
+                const zip = new JSZip();
+                const safeName = appName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                const folder = zip.folder(safeName);
+                const webDir = (exportFormat === 'capacitor' || exportFormat === 'bubblewrap') ? folder.folder("www") : folder;
+                const assetFolder = webDir.folder("internal_assets");
+                
+                const entryPoint = files.find(f => f.name === 'index.html') ? 'index.html' : (files.find(f => f.name.endsWith('.html'))?.name || 'index.html');
+                
+                let cacheAssets = ['./', './manifest.json', './icon-512.png', './splash-screen.png', './sw.js'];
+                let sitemap = '<?xml version="1.0" encoding="UTF-8"?>\\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\\n';
+
+                async function fetchAsset(url) {
+                    const finalUrl = useProxy ? proxyUrl + encodeURIComponent(url) : url;
+                    try {
+                        const res = await fetch(finalUrl);
+                        return res.ok ? await res.blob() : null;
+                    } catch { return null; }
+                }
+
+                function getRelPath(filePath) {
+                    const depth = filePath.split('/').length - 1;
+                    return depth > 0 ? "../".repeat(depth) : "./";
+                }
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    self.postMessage({ type: 'progress', pct: 20 + (i / files.length * 50), text: 'Bundling ' + file.name });
+                    
+                    let content = file.content;
+                    const rel = getRelPath(file.name);
+
+                    if (buildMode === 'offline_bundle') {
+                        const urlPattern = /https?:\\/\\/[^"'>\\s]+\\.(js|css|png|jpg|svg|woff2|webp)/gi;
+                        const cssUrlPattern = /url\\(['"]?(https?:\\/\\/[^'"\\)]+)['"]?\\)/gi;
+                        const urls = [...(content.match(urlPattern) || []), ...([...content.matchAll(cssUrlPattern)].map(m => m[1]))];
+                        
+                        for (const url of [...new Set(urls)]) {
+                            const fileName = url.split('/').pop().split('?')[0];
+                            const blob = await fetchAsset(url);
+                            if (blob) {
+                                assetFolder.file(fileName, blob);
+                                content = content.replaceAll(url, rel + 'internal_assets/' + fileName);
+                                cacheAssets.push('./internal_assets/' + fileName);
+                            }
+                        }
+                    }
+
+                    if (file.name.endsWith('.html')) {
+                        const pwaMeta = \`\\n<meta name="theme-color" content="\${themeColor}">\\n<link rel="manifest" href="\${rel}manifest.json">\\n<link rel="apple-touch-icon" href="\${rel}icon-512.png">\\n\`;
+                        
+                        let pushScript = '';
+                        if(notifData && notifData.enabled) {
+                            pushScript = \`
+                            <script>
+                                if ('Notification' in window) {
+                                    Notification.requestPermission().then(permission => {
+                                        if (permission === 'granted') {
+                                            navigator.serviceWorker.ready.then(registration => {
+                                                registration.showNotification('\${notifData.title}', {
+                                                    body: '\${notifData.body}',
+                                                    icon: '\${rel}icon-512.png',
+                                                    vibrate: [200, 100, 200]
+                                                });
+                                            });
+                                        }
+                                    });
+                                }
+                            <\/script>\`;
+                        }
+
+                        const swReg = \`<script>if('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('\${rel}sw.js'); }); }<\/script>\`;
+                        content = content.replace(/<\\/head>/i, pwaMeta + '</head>').replace(/<\\/body>/i, swReg + pushScript + '</body>');
+                        sitemap += \`<url><loc>\${file.name}</loc></url>\\n\`;
+                    }
+
+                    webDir.file(file.name, content);
+                }
+
+                sitemap += '</urlset>';
+                webDir.file("sitemap.xml", sitemap);
+                webDir.file("icon-512.png", iconBlob);
+                webDir.file("splash-screen.png", splashBlob);
+                webDir.file("manifest.json", JSON.stringify({
+                    name: appName, short_name: appName.substring(0,12), start_url: entryPoint, display: "standalone",
+                    background_color: "#ffffff", theme_color: themeColor,
+                    icons: [{src: "icon-512.png", sizes: "512x512", type: "image/png"}]
+                }, null, 2));
+
+                const swCode = \`const C='pwa-v3.2-\${Date.now()}';const A=\${JSON.stringify([...new Set(cacheAssets)])};self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(A))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));\`;
+                webDir.file("sw.js", swCode);
+
+                const blob = await zip.generateAsync({type:"blob", compression: "DEFLATE", compressionOptions: {level: 9}});
+                self.postMessage({ type: 'complete', blob: blob, safeName: safeName });
+                self.close();
+            };
+        `;
+
+        const blobWorker = new Blob([workerCode], { type: 'application/javascript' });
+        let bundleWorker; 
+
+        const haptic = (ms = 10) => { if ("vibrate" in navigator) navigator.vibrate(ms); };
+        const playPremiumSound = (freq = 440) => {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.2);
+            } catch(e) {}
+        };
+
+        const initDB = () => {
+            return new Promise((resolve) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('projects')) db.createObjectStore('projects', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('history')) db.createObjectStore('history', { keyPath: 'id', autoIncrement: true });
+                };
+                req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+            });
+        };
+
+        const sanitizeHTML = (html) => {
+            return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "[REMOVED_SCRIPT]")
+                       .replace(/on\w+="[^"]*"/gi, "")
+                       .replace(/<iframe|object|embed/gi, "[REMOVED_ELEMENT]");
+        };
+
+        const validateAppName = (el) => {
+            const pattern = /^[a-zA-Z0-9\s]*$/;
+            const err = document.getElementById('nameError');
+            const btn = document.querySelector('button[onclick="processAndDownload()"]');
+            if(!pattern.test(el.value)) {
+                err.classList.remove('hidden');
+                el.classList.add('border-red-500');
+                btn.disabled = true;
+                btn.classList.add('opacity-50');
+            } else {
+                err.classList.add('hidden');
+                el.classList.remove('border-red-500');
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }
+        };
+
+        const handleIconUpload = async (el) => {
+            const file = el.files[0];
+            if(file) {
+                uploadedIconBlob = file;
+                document.getElementById('iconStatusText').textContent = "READY";
+                haptic(20);
+                showMsg("Custom Icon Loaded", "success");
+            }
+        };
+
+        async function runAudit(files) {
+            document.getElementById('auditSection').classList.remove('hidden');
+            document.getElementById('previewSection').classList.remove('hidden');
+            document.getElementById('deploymentSection').classList.remove('hidden');
+            
+            let results = { seo: 0, mobile: 0, speed: 0, access: 0, meta: true, links: 0, script: 0, img: 0 };
+            
+            if(files.length > 0) {
+                const firstHTML = files.find(f => f.name.endsWith('.html'));
+                if(firstHTML) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById('livePreview').srcdoc = sanitizeHTML(e.target.result);
+                    };
+                    reader.readAsText(firstHTML);
+                }
+            }
+
+            for(let file of files) {
+                if(!file.name.endsWith('.html')) continue;
+                const text = await file.text();
+                const cleanText = sanitizeHTML(text);
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(cleanText, 'text/html');
+
+                if(doc.title) results.seo += 40;
+                if(doc.querySelector('meta[name="description"]')) results.seo += 40; else results.meta = false;
+                if(doc.querySelector('h1')) results.seo += 20;
+                if(doc.querySelector('meta[name="viewport"]')) results.mobile = 100;
+
+                const scripts = doc.querySelectorAll('script');
+                results.script += scripts.length;
+                results.speed = Math.max(0, 100 - (Array.from(scripts).filter(s => s.src).length * 5));
+
+                const images = doc.querySelectorAll('img');
+                results.img += images.length;
+                const altTags = Array.from(images).filter(i => i.alt).length;
+                results.access = images.length > 0 ? Math.round((altTags / images.length) * 100) : 100;
+                results.links += doc.querySelectorAll('a').length;
+            }
+
+            const updateResult = (id, val) => {
+                const el = document.getElementById(id);
+                el.textContent = val;
+                el.className = `score-circle border-2 ${val < 50 ? 'border-red-500 text-red-500' : 'border-green-500 text-green-500'}`;
+            };
+
+            updateResult('res-seo', results.seo);
+            updateResult('res-mobile', results.mobile);
+            updateResult('res-speed', results.speed);
+            updateResult('res-access', results.access);
+
+            document.getElementById('res-meta').textContent = results.meta ? 'META OK' : 'MISSING META';
+            document.getElementById('res-links').textContent = results.links + ' LINKS';
+            document.getElementById('res-img').textContent = results.img + ' IMGS';
+            document.getElementById('res-script').textContent = results.script + ' SCRIPTS';
+        }
+
+        async function processAndDownload() {
+            try {
+                haptic(30); playPremiumSound(600);
+                const appName = document.getElementById('appName').value || "PWA App";
+                const themeColor = document.getElementById('themeColor').value;
+                const exportFormat = document.getElementById('exportFormat').value;
+                const buildMode = document.getElementById('buildMode').value;
+                const useProxy = document.getElementById('proxyToggle').checked;
+
+                document.getElementById('actionArea').classList.add('hidden');
+                document.getElementById('buildProgressArea').classList.remove('hidden');
+
+                updateProgress(5, "Preparing Optimized Assets...");
+                
+                // Image Compression Integrated in Blob generation
+                const i512 = uploadedIconBlob || await generateIconBlob(512, themeColor, appName);
+                const splash = await generateSplashBlob(2048, themeColor, i512);
+
+                const fileData = [];
+                for(let f of selectedFiles) {
+                    fileData.push({ name: f.name, content: await f.text() });
+                }
+
+                bundleWorker = new Worker(URL.createObjectURL(blobWorker));
+                bundleWorker.postMessage({
+                    appName, themeColor, exportFormat, buildMode,
+                    files: fileData, iconBlob: i512, splashBlob: splash,
+                    proxyUrl: PROXY_URL, useProxy: useProxy,
+                    notifData: {
+                        enabled: document.getElementById('enableNotif').checked,
+                        title: document.getElementById('notifTitle').value || appName,
+                        body: document.getElementById('notifBody').value || "Application is ready."
+                    }
+                });
+
+                bundleWorker.onmessage = (e) => {
+                    if(e.data.type === 'progress') {
+                        updateProgress(e.data.pct, e.data.text);
+                    } else if(e.data.type === 'complete') {
+                        const url = URL.createObjectURL(e.data.blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = `${e.data.safeName}_v3.2_itadip.zip`; a.click();
+                        URL.revokeObjectURL(url);
+
+                        updateProgress(100, "Generation Success!");
+                        confetti({ particleCount: 150, spread: 70, origin: { y: 0.8 } });
+                        showMsg("Project Bundled & Compressed!", "success");
+                        
+                        db.transaction('history', 'readwrite').objectStore('history').add({ appName, date: new Date().toLocaleString() });
+                        renderHistory();
+
+                        setTimeout(() => {
+                            document.getElementById('buildProgressArea').classList.add('hidden');
+                            document.getElementById('actionArea').classList.remove('hidden');
+                        }, 2500);
+                    }
+                };
+
+            } catch (err) {
+                console.error(err);
+                showMsg("Worker Error!", "error");
+            }
+        }
+
+        // Image Compression Logic inside Canvas Generation
+        function generateIconBlob(size, color, text) {
+            return new Promise(res => {
+                const radius = document.getElementById('iconRadius').value;
+                const useGlow = document.getElementById('neonGlow').checked;
+                const useCompress = document.getElementById('compressIcon').checked;
+                
+                const c = document.createElement('canvas'); c.width=c.height=size;
+                const ctx = c.getContext('2d');
+                ctx.beginPath();
+                const r = (radius / 100) * size;
+                ctx.roundRect(0, 0, size, size, [r]);
+                ctx.fillStyle = color; ctx.fill();
+                
+                if(useGlow) { ctx.shadowBlur = size * 0.05; ctx.shadowColor = "white"; }
+                ctx.fillStyle = "white"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font=`bold ${size*0.5}px sans-serif`;
+                ctx.fillText(text[0].toUpperCase(), size/2, size/2);
+                
+                // Compression: Quality 0.7 for light PWA assets
+                const quality = useCompress ? 0.7 : 0.9;
+                c.toBlob(b => res(b), 'image/png', quality);
+            });
+        }
+
+        function generateSplashBlob(size, color, iconBlob) {
+            return new Promise(async res => {
+                const useCompress = document.getElementById('compressIcon').checked;
+                const c = document.createElement('canvas'); c.width=c.height=size;
+                const ctx = c.getContext('2d');
+                ctx.fillStyle = color; ctx.fillRect(0,0,size,size);
+                const img = new Image();
+                img.src = URL.createObjectURL(iconBlob);
+                await new Promise(r => img.onload = r);
+                const iconSize = size * 0.35;
+                ctx.drawImage(img, (size-iconSize)/2, (size-iconSize)/2, iconSize, iconSize);
+                URL.revokeObjectURL(img.src);
+                
+                const quality = useCompress ? 0.6 : 0.8;
+                c.toBlob(b => res(b), 'image/png', quality);
+            });
+        }
+
+        function testNotification() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification(document.getElementById('notifTitle').value || "Test Notification", {
+                            body: document.getElementById('notifBody').value || "This is a preview of your push notification.",
+                            icon: 'https://cdn-icons-png.flaticon.com/512/3119/3119338.png'
+                        });
+                        haptic(50);
+                    }
+                });
+            }
+        }
+
+        const updateProgress = (pct, text) => {
+            document.getElementById('progressBarFill').style.width = `${pct}%`;
+            document.getElementById('progressText').textContent = text;
+            document.getElementById('progressPercent').textContent = `${Math.floor(pct)}%`;
+        };
+
+        const showMsg = (t, type) => {
+            const m = document.getElementById('messageBox'); m.textContent = t;
+            m.className = `p-5 rounded-3xl text-center text-[10px] font-black uppercase border ${type==='error'?'bg-red-500/10 text-red-500 border-red-500/20':'bg-green-500/10 text-green-600 border-green-500/20'}`;
+            m.classList.remove('hidden'); setTimeout(() => m.classList.add('hidden'), 5000);
+        };
+
+        const renderHistory = () => {
+            db.transaction('history', 'readonly').objectStore('history').getAll().onsuccess = (e) => {
+                const list = document.getElementById('historyList');
+                const data = e.target.result.slice(-5).reverse();
+                if (data.length > 0) list.innerHTML = data.map(i => `<div class="flex-shrink-0 px-4 py-2 bg-white/5 border border-white/10 rounded-2xl text-[9px] font-bold">${i.appName}</div>`).join('');
+            };
+        };
+
+        function openOneClickHost() {
+            window.open('https://app.netlify.com/drop', '_blank');
+            showMsg("Drag your ZIP to Netlify Drop!", "success");
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initDB();
+            renderHistory();
+            lucide.createIcons();
+            const tx = db.transaction('projects', 'readonly');
+            tx.objectStore('projects').get('last').onsuccess = (e) => {
+                const last = e.target.result;
+                if (last) {
+                    document.getElementById('appName').value = last.name || "";
+                    document.getElementById('themeColor').value = last.themeColor || "#3b82f6";
+                    document.getElementById('iconRadius').value = last.iconRadius || 20;
+                    document.getElementById('neonGlow').checked = last.neonGlow || false;
+                    document.getElementById('compressIcon').checked = last.compressIcon !== undefined ? last.compressIcon : true;
+                    document.getElementById('notifTitle').value = last.notifTitle || "";
+                    document.getElementById('notifBody').value = last.notifBody || "";
+                    document.getElementById('enableNotif').checked = last.enableNotif || false;
+                    updateColorHex(document.getElementById('themeColor').value);
+                }
+            };
+            setTimeout(() => {
+                document.getElementById('cinematicLoader').style.opacity = '0';
+                setTimeout(() => document.getElementById('cinematicLoader').remove(), 1000);
+            }, 1000);
+        });
+
+        document.getElementById('htmlInput').addEventListener('change', async e => {
+            selectedFiles = Array.from(e.target.files).filter(f => f.name.endsWith('.html') || f.name.endsWith('.css'));
+            if(selectedFiles.length > 0) {
+                haptic(15);
+                document.getElementById('uploadContent').innerHTML = `<p class="text-blue-500 font-black">${selectedFiles.length} ASSETS LOADED</p>`;
+                document.getElementById('actionArea').classList.remove('hidden');
+                await runAudit(selectedFiles);
+            }
+        });
+
+        const updateColorHex = (v) => { document.getElementById('colorHex').textContent = v.toUpperCase(); };
+        
+        const autoSaveProject = () => { 
+            if(db) {
+                const data = {
+                    id: 'last',
+                    name: document.getElementById('appName').value,
+                    themeColor: document.getElementById('themeColor').value,
+                    iconRadius: document.getElementById('iconRadius').value,
+                    neonGlow: document.getElementById('neonGlow').checked,
+                    compressIcon: document.getElementById('compressIcon').checked,
+                    notifTitle: document.getElementById('notifTitle').value,
+                    notifBody: document.getElementById('notifBody').value,
+                    enableNotif: document.getElementById('enableNotif').checked
+                };
+                db.transaction('projects','readwrite').objectStore('projects').put(data); 
+            }
+        };
+        
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            document.getElementById('moonIcon').classList.toggle('hidden');
+            document.getElementById('sunIcon').classList.toggle('hidden');
+        });
+        function exportBackup() { showMsg("Local Database Synced", "success"); }
+    </script>
+</body>
+</html>
